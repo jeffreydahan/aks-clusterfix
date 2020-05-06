@@ -1,0 +1,17 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+  name: azurefile-newcluster-customer1
+provisioner: kubernetes.io/azure-file
+mountOptions:
+  - dir_mode=0777
+  - file_mode=0777
+  - uid=0
+  - gid=0
+  - mfsymlinks
+  - cache=strict
+parameters:
+  skuName: Standard_LRS
+  resourceGroup: jfrogaksstorage
+  storageAccount: fd5de34cb1198400b9407ff
+  shareName: kubernetes-dynamic-pvc-4918c0a1-2eec-4f6e-ab3d-d4eca11e617e

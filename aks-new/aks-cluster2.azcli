@@ -1,0 +1,59 @@
+az login
+
+subscriptionId="[your subscriptionId]"
+rgName="clusteraks2"
+locationName="centralus"
+appName="clusteraks2"
+aksClusterName="clusteraks2"
+vnetName="clusteraks2"
+subnetName="clusteraks2"
+
+
+az account set --subscription $subscriptionId
+az group create --name $rgName --location $locationName
+az network vnet create --resource-group $rgName --name $vnetName --address-prefixes 10.0.0.0/16 --subnet-name $subnetName --subnet-prefix 10.0.0.0/24
+subnetId=$(az network vnet subnet list --resource-group $rgName --vnet-name $vnetName --query "[0].id" --output tsv)
+echo $subnetId
+appId=$(az ad sp create-for-rbac --name $appName --skip-assignment --query "appId" -o tsv)
+az ad sp create-for-rbac --name $appName --skip-assignment
+appSecret=$(az ad app credential reset --id $appId | jq -r .password)
+echo $appId
+echo $appSecret
+az aks create --load-balancer-sku basic --name $aksClusterName --resource-group $rgName --network-plugin "azure" --vnet-subnet-id $subnetId --docker-bridge-address 172.17.0.1/16 --dns-service-ip 10.2.0.10 --service-cidr 10.2.0.0/24 --generate-ssh-keys --min-count 1 --max-count 2 --node-count 1 --enable-cluster-autoscaler --service-principal $appId --client-secret $appSecret
+az aks get-credentials --resource-group $rgName --name $aksClusterName
+
+kubectl cluster-info
+
+# add SPN
+
+kubectl apply -f azure-file-sc-aks-cluster2.yaml
+kubectl describe storageclass azurefile-newcluster-customer1
+kubectl apply -f azure-file-pvc-aks-cluster2.yaml
+
+kubectl get pv
+kubectl patch pv pvc-7a23d7cf-aff6-478e-917e-df7910c5a720 -p "{\"spec\":{\"persistentVolumeReclaimPolicy\":\"Retain\"}}"
+kubectl get pv 
+
+kubectl delete -f azure-file-pvc-aks-cluster2.yaml
+kubectl get pvc 
+kubectl get pv
+
+kubectl apply -f azure-file-pvc-aks-cluster2-specify-pv.yaml
+kubectl get pvc
+kubectl get pv
+
+kubectl patch pvc customer2-pvc -p '{"spec":{"capacity":{"storage":"5Gi"}}}'
+
+kubectl patch pv pvc-f983ae97-97b6-45c8-bf14-b103d48ab4b4 -p "{\"spec\":{\"persistentVolumeReclaimPolicy\":\"Delete\"}}"
+kubectl get pv 
+
+kubectl apply -f azure-file-pvc-aks-cluster2-specify-pv.yaml
+kubectl get pv 
+
+kubectl apply -f nginx-pod-with-pvc.yaml
+kubectl describe pod mypod
+kubectl exec -it mypod -- /bin/bash
+mount | grep "file.core.windows.net"
+cat /mnt/azure/customer1.txt
+
+kubectl delete -f nginx-pod-with-pvc.yaml
