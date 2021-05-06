@@ -9,4 +9,4 @@ spec:
   resources:
     requests:
       storage: 5Gi
-  volumeName: "pvc-7a23d7cf-aff6-478e-917e-df7910c5a720"
+  volumeName: "pvc-xxx"
