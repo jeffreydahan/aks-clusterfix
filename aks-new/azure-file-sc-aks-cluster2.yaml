@@ -12,6 +12,6 @@ mountOptions:
   - cache=strict
 parameters:
   skuName: Standard_LRS
-  resourceGroup: jfrogaksstorage
-  storageAccount: fd5de34cb1198400b9407ff
-  shareName: kubernetes-dynamic-pvc-4918c0a1-2eec-4f6e-ab3d-d4eca11e617e
+  resourceGroup: xxxx
+  storageAccount: xxxxx
+  shareName: kubernetes-dynamic-pvc-xxxx
